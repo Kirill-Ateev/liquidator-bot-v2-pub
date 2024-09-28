@@ -1,41 +1,41 @@
 {
-  "name": "evaa-liquidator",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "build": "tsc -p .",
-    "start": "ts-node src/index.ts",
-    "start:dev": "npx nodemon",
-    "test": "npx tsx --test"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "@types/chai": "^4.3.17",
-    "@types/node": "^20.8.3",
-    "bip39": "^3.1.0",
-    "chai": "^5.1.1",
-    "jest": "^29.7.0",
-    "nodemon": "^3.0.1",
-    "ts-node": "^10.9.1",
-    "typescript": "^5.2.2"
-  },
-  "dependencies": {
-    "@iota/sdk": "^1.1.0",
-    "@orbs-network/ton-access": "^2.3.3",
-    "@ton/core": "^0.53.0",
-    "@ton/crypto": "^3.2.0",
-    "@ton/ton": "^14.0.0",
-    "axios": "^1.5.1",
-    "crypto-js": "^4.2.0",
-    "dotenv": "^16.3.1",
-    "ethereumjs-util": "7.0.10",
-    "ethers": "5.6.9",
-    "grammy": "^1.19.2",
-    "sort-deep-object-arrays": "^1.1.2",
-    "sqlite": "^5.0.1",
-    "sqlite3": "^5.1.6"
-  }
+    "name": "evaa-liquidator",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "build": "tsc",
+        "start": "ts-node src/index.ts",
+        "start:dev": "npx nodemon",
+        "test": "npx tsx --test"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "@types/chai": "^4.3.17",
+        "@types/node": "^20.8.3",
+        "bip39": "^3.1.0",
+        "chai": "^5.1.1",
+        "jest": "^29.7.0",
+        "nodemon": "^3.0.1",
+        "ts-node": "^10.9.1",
+        "typescript": "^5.2.2"
+    },
+    "dependencies": {
+        "@iota/sdk": "^1.1.0",
+        "@orbs-network/ton-access": "^2.3.3",
+        "@ton/core": "^0.53.0",
+        "@ton/crypto": "^3.2.0",
+        "@ton/ton": "^14.0.0",
+        "axios": "^1.5.1",
+        "crypto-js": "^4.2.0",
+        "dotenv": "^16.3.1",
+        "ethereumjs-util": "7.0.10",
+        "ethers": "5.6.9",
+        "grammy": "^1.19.2",
+        "sort-deep-object-arrays": "^1.1.2",
+        "sqlite": "^5.0.1",
+        "sqlite3": "^5.1.6"
+    }
 }
