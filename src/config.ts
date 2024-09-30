@@ -48,11 +48,12 @@ export const CollateralSelectPriorities = new Map<bigint, number>([
 export const isTestnet = false
 
 export const jettonWallets = {
-    jUSDT: 'EQA6X8-lL4GOV8unCtzgx0HiQJovggHEniGIPGjB7RBIRR3M',
-    jUSDC: 'EQA6mXtvihA1GG57dFCbzI1NsBlMu4iN-iSxbzN_seSlbaVM',
-    stTON: 'EQAw_YE5y9U3LFTPtm7peBWKz1PUg77DYlrJ3_NDyQAfab5s',
-    tsTON: 'EQDdpsEJ2nyPP2W2yzdcM2A4FeU-IQGyxM0omo0U2Yv2DvTB',
-    USDT: 'EQC183ELZmTbdsfRtPmp-SzyRXf0UOV3pdNNwtX2P98z2pQM',
+    // jUSDT: 'EQA6X8-lL4GOV8unCtzgx0HiQJovggHEniGIPGjB7RBIRR3M',
+    // jUSDC: 'EQA6mXtvihA1GG57dFCbzI1NsBlMu4iN-iSxbzN_seSlbaVM',
+    // stTON: 'EQAw_YE5y9U3LFTPtm7peBWKz1PUg77DYlrJ3_NDyQAfab5s',
+    // tsTON: 'EQDdpsEJ2nyPP2W2yzdcM2A4FeU-IQGyxM0omo0U2Yv2DvTB',
+
+    USDT: 'EQC7jrSQ5U5J0Z-RqdPHWSWb0xq_dLDIvRd4UZyBRa0cxsDX',
     // // for LP-pool version
     // TONUSDT_DEDUST: 'EQD1msA18OaAzYPAVrFKfbxHCl1kxQkzsY7zolgtwAqgUuMP',
     // TONUSDT_STONFI: 'EQAoXoKRiIx8SDXBXKUHJXfGYXi98a7Pr0UzMOSLz4gely2Z',
@@ -76,9 +77,9 @@ export const HIGHLOAD_CODE = Cell.fromBase64(
 )
 
 // assets banned from being swapped from
-export const BANNED_ASSETS_FROM = [AssetID.tsTON, AssetID.jUSDC]
+export const BANNED_ASSETS_FROM = [AssetID.TON, AssetID.USDT, AssetID.stTON, AssetID.tsTON]
 // assets banned from being swapped to
-export const BANNED_ASSETS_TO = [AssetID.tsTON, AssetID.jUSDC]
+export const BANNED_ASSETS_TO = [AssetID.tsTON, AssetID.jUSDC, AssetID.jUSDT, AssetID.stTON]
 //  lower bound of asset worth to swap
 export const PRICE_ACCURACY = 1_000_000_000n // 10**9
 export const MIN_WORTH_SWAP_LIMIT: bigint = 100n * PRICE_ACCURACY // usd
