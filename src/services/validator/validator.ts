@@ -188,7 +188,8 @@ Rejected task data:
 <b>- Loan asset:</b> ${getAssetName(gLoanAsset)}
 <b>- Liquidation amount:</b> ${getFriendlyAmount(liquidationAmount, getAssetName(gLoanAsset))}
 <b>- Collateral asset:</b> ${getAssetName(gCollateralAsset)}
-<b>- Min collateral amount:</b> ${getFriendlyAmount(minCollateralAmount, getAssetName(gCollateralAsset))}`
+<b>- Min collateral amount:</b> ${getFriendlyAmount(minCollateralAmount, getAssetName(gCollateralAsset))}`,
+                        { parse_mode: 'HTML' }
                     )
                     // console.log(`Not enough collateral for ${user.wallet_address}`);
                 }
