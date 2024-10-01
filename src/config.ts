@@ -83,3 +83,10 @@ export const BANNED_ASSETS_TO = [AssetID.tsTON, AssetID.jUSDC, AssetID.jUSDT, As
 //  lower bound of asset worth to swap
 export const PRICE_ACCURACY = 1_000_000_000n // 10**9
 export const MIN_WORTH_SWAP_LIMIT: bigint = 100n * PRICE_ACCURACY // usd
+// min levels for liquidation task
+export const MIN_AMOUNT_USDT_TO_LIQUIDATE = BigInt(300 * Number(AssetDecimals['USDT'])) // 300$
+export const MIN_AMOUNT_TON_TO_LIQUIDATE = BigInt(53 * Number(AssetDecimals['TON'])) // 53 TON
+export const MIN_AMOUNT_jUSDT_TO_LIQUIDATE = BigInt(300 * Number(AssetDecimals['jUSDT'])) // 300$
+export const MIN_AMOUNT_jUSDC_TO_LIQUIDATE = BigInt(300 * Number(AssetDecimals['jUSDC'])) // 300$
+export const MIN_AMOUNT_tsTON_TO_LIQUIDATE = BigInt(53 * Number(AssetDecimals['tsTON'])) // 53 tsTON
+export const MIN_AMOUNT_stTON_TO_LIQUIDATE = BigInt(53 * Number(AssetDecimals['stTON'])) // 53 stTON
