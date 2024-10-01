@@ -164,7 +164,9 @@ export async function validateBalances(db: MyDatabase, tonClient: TonClient, bot
                 const isValidMinAmount = isValidLiquidationAmount(gLoanAsset, liquidationAmount)
                 const isValidCollateral = isValidCollateralAsset(gCollateralAsset)
 
-                if (isValidMinAmount && isValidCollateral && minCollateralAmount >= (pricesDict.get(AssetID.TON) * collateralDecimal) / gCollateralAssetPrice) {
+                const isPriceValid = minCollateralAmount >= (pricesDict.get(AssetID.TON) * collateralDecimal) / gCollateralAssetPrice
+
+                if (isValidMinAmount && isValidCollateral && isPriceValid) {
                     const queryID = BigInt(Date.now())
                     await db.addTask(
                         user.wallet_address,
@@ -180,17 +182,19 @@ export async function validateBalances(db: MyDatabase, tonClient: TonClient, bot
                     )
                     console.log(`Task for ${user.wallet_address} added`)
                 } else {
-                    bot.api.sendMessage(
-                        serviceChatID,
-                        `[Validator]: ❌ Task did not validate the threshold of validating assets (${isValidCollateral}) and the min amount (${isValidMinAmount}). Or not enough collateral for user.
+                    if (isPriceValid && (isValidMinAmount || isValidCollateral)) {
+                        bot.api.sendMessage(
+                            serviceChatID,
+                            `[Validator]: ❌ Task with did not validate the threshold of validating assets (${isValidCollateral}) and the min amount (${isValidMinAmount}). Or not enough collateral for user.
                         
 Rejected task data: 
 <b>- Loan asset:</b> ${getAssetName(gLoanAsset)}
 <b>- Liquidation amount:</b> ${getFriendlyAmount(liquidationAmount, getAssetName(gLoanAsset))}
 <b>- Collateral asset:</b> ${getAssetName(gCollateralAsset)}
 <b>- Min collateral amount:</b> ${getFriendlyAmount(minCollateralAmount, getAssetName(gCollateralAsset))}`,
-                        { parse_mode: 'HTML' }
-                    )
+                            { parse_mode: 'HTML' }
+                        )
+                    }
                     // console.log(`Not enough collateral for ${user.wallet_address}`);
                 }
             } else {
