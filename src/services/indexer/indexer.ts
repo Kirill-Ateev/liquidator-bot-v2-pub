@@ -2,7 +2,7 @@ import { Evaa, EvaaUser, TON_MAINNET } from '@evaafi/sdkv6'
 import { Address, Dictionary } from '@ton/core'
 import { Cell, OpenedContract, TonClient } from '@ton/ton'
 import { AxiosInstance, AxiosResponse } from 'axios'
-import { JETTON_WALLETS, POOL_CONFIG, RPC_CALL_DELAY, TX_PROCESS_DELAY, USER_UPDATE_DELAY } from '../../config'
+import { JETTON_WALLETS, POOL_CONFIG, RPC_CALL_DELAY, TX_PROCESS_DELAY, USED_ASSETS_IDS_TO_LIQUIDATES, USER_UPDATE_DELAY } from '../../config'
 import { DATABASE_DEFAULT_RETRY_OPTIONS, MyDatabase } from '../../db/database'
 import { User } from '../../db/types'
 import { getBalances } from '../../lib/balances'
@@ -182,7 +182,10 @@ export async function handleTransactions(
                         await db.liquidateSuccess(queryID)
                         console.log(`Liquidation task (Query ID: ${queryID}) successfully completed`)
 
-                        const assetIds = POOL_CONFIG.poolAssetsConfig.filter((it) => it.assetId !== TON_MAINNET.assetId).map((it) => it.assetId)
+                        const assetIds = POOL_CONFIG.poolAssetsConfig
+                            .filter((it) => it.assetId !== TON_MAINNET.assetId)
+                            .filter((it) => USED_ASSETS_IDS_TO_LIQUIDATES.includes(it.assetId))
+                            .map((it) => it.assetId)
 
                         const myBalance = await getBalances(tonClient, walletAddress, assetIds, JETTON_WALLETS)
                         const localTime = new Date(utime)

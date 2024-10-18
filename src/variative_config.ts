@@ -50,3 +50,6 @@ export const MIN_AMOUNT_jUSDT_TO_LIQUIDATE = BigInt(300 * Number(ASSET_DECIMALS[
 export const MIN_AMOUNT_jUSDC_TO_LIQUIDATE = BigInt(300 * Number(ASSET_DECIMALS['jUSDC'])) // 300$
 export const MIN_AMOUNT_tsTON_TO_LIQUIDATE = BigInt(53 * Number(ASSET_DECIMALS['tsTON'])) // 53 tsTON
 export const MIN_AMOUNT_stTON_TO_LIQUIDATE = BigInt(53 * Number(ASSET_DECIMALS['stTON'])) // 53 stTON
+
+// jettons are uset to excess liquidates
+export const USED_ASSETS_IDS_TO_LIQUIDATES = [ASSET_ID.USDT]
