@@ -32,13 +32,15 @@ export const NO_PRIORITY_SELECTED = 999;
 // assets banned from being swapped from
 export const BANNED_ASSETS_FROM = [
     // ASSET_ID.tsTON,
-    ASSET_ID.jUSDC
-];
+    // ASSET_ID.stTON,
+    // ASSET_ID.jUSDT,
+    // ASSET_ID.jUSDC,
+    ASSET_ID.TON,
+    ASSET_ID.USDT,
+]
 // assets banned from being swapped to
-export const BANNED_ASSETS_TO = [
-    // ASSET_ID.tsTON,
-    ASSET_ID.jUSDC
-];
+export const BANNED_ASSETS_TO = [ASSET_ID.tsTON, ASSET_ID.stTON, ASSET_ID.jUSDT, ASSET_ID.jUSDC]
+
 export const LT_SCALE: bigint = 10_000n;
 export const LB_SCALE: bigint = 10_000n;
 
@@ -60,5 +62,18 @@ export const LIQUIDATION_BALANCE_LIMITS = new Map<bigint, bigint>([
     [ASSET_ID.USDT_STORM,       1_000_000_000n],
 ]);
 
-// worth of 100$ - important constant for making decision about liquidation amount
-export const LIQUIDATION_STRATEGIC_LIMIT = 100_000_000_000n;
+export const ASSET_DECIMALS = {
+    TON: 1_000_000_000n, // 9
+    USDT: 1_000_000n, // 6
+    jUSDT: 1_000_000n, // 6
+    jUSDC: 1_000_000n, // 6
+    tsTON: 1_000_000_000n, // 9
+    stTON: 1_000_000_000n, // 9
+    TONUSDT_DEDUST: 1_000_000_000n, // 9
+    TONUSDT_STONFI: 1_000_000_000n, // 9
+    TON_STORM: 1_000_000_000n, // 9
+    USDT_STORM: 1_000_000_000n, // 9
+}
+
+// worth of 1000$ - important constant for making decision about liquidation amount
+export const LIQUIDATION_STRATEGIC_LIMIT = 1_000_000_000_000n;

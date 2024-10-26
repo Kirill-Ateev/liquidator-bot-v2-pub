@@ -11,7 +11,7 @@ import {
     LiquidationParameters,
     TON_MAINNET
 } from "@evaafi/sdk";
-import {JETTON_WALLETS, LIQUIDATION_BALANCE_LIMITS} from "../../config";
+import {JETTON_WALLETS, LIQUIDATION_BALANCE_LIMITS, USED_ASSETS_IDS_TO_LIQUIDATES} from "../../config";
 
 import {MyDatabase} from "../../db/database";
 import {HighloadWalletV2, makeLiquidationCell} from "../../lib/highload_contract_v2";
@@ -36,6 +36,7 @@ export async function handleLiquidates(db: MyDatabase, tonClient: TonClient,
     const tasks = await db.getTasks(MAX_TASKS_FETCH);
     const assetIds = evaa.poolConfig.poolAssetsConfig
         .filter(asset => asset.assetId !== TON_MAINNET.assetId)
+        .filter((it) => USED_ASSETS_IDS_TO_LIQUIDATES.includes(it.assetId))
         .map(asset => asset.assetId);
 
     const liquidatorBalances: WalletBalances = await getBalances(tonClient, highloadAddress, assetIds, JETTON_WALLETS);

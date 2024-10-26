@@ -1,6 +1,6 @@
 import {DATABASE_DEFAULT_RETRY_OPTIONS, MyDatabase} from "../../db/database";
 import {AxiosInstance, AxiosResponse} from "axios";
-import {JETTON_WALLETS, RPC_CALL_DELAY, TX_PROCESS_DELAY, USER_UPDATE_DELAY} from "../../config";
+import {JETTON_WALLETS, RPC_CALL_DELAY, TX_PROCESS_DELAY, USED_ASSETS_IDS_TO_LIQUIDATES, USER_UPDATE_DELAY} from "../../config";
 import {
     checkEligibleSwapTask,
     DelayedCallDispatcher,
@@ -177,6 +177,7 @@ export async function handleTransactions(db: MyDatabase, tonApi: AxiosInstance, 
 
                         const assetIds = evaa.poolConfig.poolAssetsConfig
                             .filter(it => it.assetId !== TON_MAINNET.assetId)
+                            .filter((it) => USED_ASSETS_IDS_TO_LIQUIDATES.includes(it.assetId))
                             .map(it => it.assetId);
 
                         const myBalance = await getBalances(tonClient, walletAddress, assetIds, JETTON_WALLETS);

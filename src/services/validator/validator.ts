@@ -1,19 +1,21 @@
-import {OpenedContract} from "@ton/ton";
-import {MyDatabase} from "../../db/database";
-import {isAxiosError} from "axios";
 import {
     calculateHealthParams,
     calculateLiquidationAmounts,
     Evaa,
     findAssetById,
     PoolConfig,
-    selectGreatestAssets,
     TON_MAINNET
 } from "@evaafi/sdk";
+import {OpenedContract} from "@ton/ton";
+import {isAxiosError} from "axios";
+import {MyDatabase} from "../../db/database";
 import {Messenger} from "../../lib/bot";
+import {ASSET_DECIMALS} from "../../steady_config";
+import {isValidCollateralAsset, isValidLiquidationAmount} from "../../util/blockchain";
+import {getFriendlyAmount} from "../../util/format";
 import {retry} from "../../util/retry";
-import {PriceData} from "./types";
 import {addLiquidationTask, selectLiquidationAssets} from "./helpers";
+import {PriceData} from "./types";
 
 export async function validateBalances(db: MyDatabase, evaa: OpenedContract<Evaa>, bot: Messenger, poolConfig: PoolConfig) {
     try {
@@ -106,7 +108,12 @@ export async function validateBalances(db: MyDatabase, evaa: OpenedContract<Evaa
             }
 
             const MIN_ALLOWED_COLLATERAL_WORTH = pricesDict.get(TON_MAINNET.assetId); // 1 TON worth in 10**9 decimals
-            if (minCollateralAmount * collateralPrice >= MIN_ALLOWED_COLLATERAL_WORTH * collateralScale) {
+            
+            const isPriceValid = minCollateralAmount * collateralPrice >= MIN_ALLOWED_COLLATERAL_WORTH * collateralScale
+            const isValidMinAmount = isValidLiquidationAmount(loanAsset.assetId, maxLiquidationAmount)
+            const isValidCollateral = isValidCollateralAsset(collateralAsset.assetId)
+            
+            if (isPriceValid && isValidMinAmount && isValidCollateral) {
                 await addLiquidationTask(db, user,
                     loanAsset.assetId, collateralAsset.assetId,
                     maxLiquidationAmount, minCollateralAmount,
@@ -115,7 +122,20 @@ export async function validateBalances(db: MyDatabase, evaa: OpenedContract<Evaa
                 await bot.sendMessage(`Task for ${user.wallet_address} added`);
                 console.log(`Task for ${user.wallet_address} added`);
             } else {
-                // console.log(`Not enough collateral for ${user.wallet_address}`);
+                if (isPriceValid && (isValidMinAmount || isValidCollateral)) {
+                   
+
+                    bot.sendMessage(
+                        `[Validator]: ❌ Task with did not validate the threshold of validating assets (${isValidCollateral}) and the min amount (${isValidMinAmount}). Or not enough collateral for user.
+                    
+Rejected task data: 
+<b>- Loan asset:</b> ${loanAsset.name}
+<b>- Liquidation amount:</b> ${getFriendlyAmount(maxLiquidationAmount, ASSET_DECIMALS[loanAsset.name], loanAsset.name)}
+<b>- Collateral asset:</b> ${collateralAsset.name}
+<b>- Min collateral amount:</b> ${getFriendlyAmount(minCollateralAmount, ASSET_DECIMALS[collateralAsset.name], collateralAsset.name)}`,
+                        { parse_mode: 'HTML' }
+                    )
+                }
             }
         }
         // console.log(`Finish validating balances at ${new Date().toLocaleString()}`)
