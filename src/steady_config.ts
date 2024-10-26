@@ -1,6 +1,6 @@
-import {sha256Hash} from "./util/crypto";
+import { sha256Hash } from "./util/crypto";
 
-import {ASSET_ID as _ASSET_ID} from "@evaafi/sdk";
+import { ASSET_ID as _ASSET_ID } from "@evaafi/sdk";
 
 export const ASSET_ID = {
     ..._ASSET_ID,
