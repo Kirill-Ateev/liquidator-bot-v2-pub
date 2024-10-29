@@ -1,17 +1,10 @@
 import {sha256Hash} from "./util/crypto";
 
+import {ASSET_ID as _ASSET_ID} from "@evaafi/sdk";
+
 export const ASSET_ID = {
-    TON:            sha256Hash('TON'),
-    USDT:           sha256Hash('USDT'),
-    jUSDT:          sha256Hash('jUSDT'),
-    jUSDC:          sha256Hash('jUSDC'),
-    stTON:          sha256Hash('stTON'),
-    tsTON:          sha256Hash('tsTON'),
-    TONUSDT_DEDUST: sha256Hash('TONUSDT_DEDUST'),
-    TONUSDT_STONFI: sha256Hash('TONUSDT_STONFI'),
-    TON_STORM:      sha256Hash('TON_STORM'),
-    USDT_STORM:     sha256Hash('USDT_STORM'),
-    time:           sha256Hash('time'),
+    ..._ASSET_ID,
+    time: sha256Hash('time'),
 };
 
 export const COLLATERAL_SELECT_PRIORITY = new Map<bigint, number>([
