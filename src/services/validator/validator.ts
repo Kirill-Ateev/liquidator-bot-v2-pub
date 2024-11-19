@@ -107,13 +107,13 @@ export async function validateBalances(db: MyDatabase, evaa: OpenedContract<Evaa
                 continue;
             }
 
-            const MIN_ALLOWED_COLLATERAL_WORTH = pricesDict.get(TON_MAINNET.assetId); // 1 TON worth in 10**9 decimals
+            const MIN_ALLOWED_COLLATERAL_WORTH = pricesDict.get(TON_MAINNET.assetId) * 50n; // 1 TON worth in 10**9 decimals
             
             const isPriceValid = minCollateralAmount * collateralPrice >= MIN_ALLOWED_COLLATERAL_WORTH * collateralScale
-            const isValidMinAmount = isValidLiquidationAmount(loanAsset.assetId, maxLiquidationAmount)
+            // const isValidMinAmount = isValidLiquidationAmount(loanAsset.assetId, maxLiquidationAmount)
             const isValidCollateral = isValidCollateralAsset(collateralAsset.assetId)
             
-            if (isPriceValid && isValidMinAmount && isValidCollateral) {
+            if (isPriceValid && isValidCollateral) {
                 await addLiquidationTask(db, user,
                     loanAsset.assetId, collateralAsset.assetId,
                     maxLiquidationAmount, minCollateralAmount,
@@ -122,11 +122,11 @@ export async function validateBalances(db: MyDatabase, evaa: OpenedContract<Evaa
                 await bot.sendMessage(`Task for ${user.wallet_address} added`);
                 console.log(`Task for ${user.wallet_address} added`);
             } else {
-                if (isPriceValid && (isValidMinAmount || isValidCollateral)) {
+                if (isPriceValid && isValidCollateral) {
                    
 
                     bot.sendMessage(
-                        `[Validator]: ❌ Task with did not validate the threshold of validating assets (${isValidCollateral}) and the min amount (${isValidMinAmount}). Or not enough collateral for user.
+                        `[Validator]: ❌ Task with did not validate the threshold of validating assets (${isValidCollateral}) and the min amount (${isPriceValid}). Or not enough collateral for user.
                     
 Rejected task data: 
 <b>- Loan asset:</b> ${loanAsset.name}
