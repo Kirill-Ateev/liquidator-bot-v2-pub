@@ -2,6 +2,7 @@ import { sha256Hash } from "./util/crypto";
 
 import { ASSET_ID as _ASSET_ID } from "@evaafi/sdk";
 
+
 export const ASSET_ID = {
     ..._ASSET_ID,
     time: sha256Hash('time'),
@@ -18,6 +19,9 @@ export const COLLATERAL_SELECT_PRIORITY = new Map<bigint, number>([
         [ASSET_ID.TONUSDT_STONFI,   8],
         [ASSET_ID.TON_STORM,        9],
         [ASSET_ID.USDT_STORM,       10],
+        [ASSET_ID.NOT,              11],
+        [ASSET_ID.DOGS,             12],
+        [ASSET_ID.CATI,             13],
     ]
 );
 export const NO_PRIORITY_SELECTED = 999;
@@ -53,6 +57,9 @@ export const LIQUIDATION_BALANCE_LIMITS = new Map<bigint, bigint>([
     [ASSET_ID.TONUSDT_STONFI,   1_000_000_000n],
     [ASSET_ID.TON_STORM,        1_000_000_000n],
     [ASSET_ID.USDT_STORM,       1_000_000_000n],
+    [ASSET_ID.NOT,              1_000_000_000n],
+    [ASSET_ID.DOGS,             1_000_000_000n],
+    [ASSET_ID.CATI,             1_000_000_000n],
 ]);
 
 export const ASSET_DECIMALS = {
@@ -70,3 +77,6 @@ export const ASSET_DECIMALS = {
 
 // worth of 1000$ - important constant for making decision about liquidation amount
 export const LIQUIDATION_STRATEGIC_LIMIT = 1_000_000_000_000n;
+
+
+export const SKIP_SWAP_VALUE_CHECK = false;

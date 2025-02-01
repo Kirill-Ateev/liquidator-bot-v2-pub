@@ -6,25 +6,24 @@ import {
     PoolConfig,
     TON_MAINNET
 } from "@evaafi/sdk";
-import {OpenedContract} from "@ton/ton";
-import {isAxiosError} from "axios";
-import {MyDatabase} from "../../db/database";
-import {Messenger} from "../../lib/bot";
-import {ASSET_DECIMALS} from "../../steady_config";
-import {isValidCollateralAsset, isValidLiquidationAmount} from "../../util/blockchain";
-import {getFriendlyAmount} from "../../util/format";
+import {logMessage, Messenger} from "../../lib/messenger";
 import {retry} from "../../util/retry";
 import {addLiquidationTask, selectLiquidationAssets} from "./helpers";
 import {PriceData} from "./types";
+import { MyDatabase } from "../../db/database";
+import { OpenedContract } from "@ton/core";
+import { isValidCollateralAsset } from "../../util/blockchain";
+import { getFriendlyAmount } from "../../util/format";
+import { ASSET_DECIMALS } from "../../steady_config";
+import { isAxiosError } from "axios";
 
 export async function validateBalances(db: MyDatabase, evaa: OpenedContract<Evaa>, bot: Messenger, poolConfig: PoolConfig) {
     try {
-        // console.log(`Start validating balances at ${new Date().toLocaleString()}`)
         const users = await db.getUsers();
 
         // fetch prices
         const pricesRes = await retry<PriceData>(
-            async () => await evaa.getPrices(),
+            async () => await evaa.getPrices(['evaa.space', 'iota.evaa.finance', 'api.stardust-mainnet.iotaledger.net']),
             {attempts: 10, attemptInterval: 1000}
         );
         if (!pricesRes.ok) throw (`Failed to fetch prices`);
@@ -42,7 +41,7 @@ export async function validateBalances(db: MyDatabase, evaa: OpenedContract<Evaa
 
         for (const user of users) {
             if (await db.isTaskExists(user.wallet_address)) {
-                console.log(`Task for ${user.wallet_address} already exists, skipping...`);
+                logMessage(`Validator: Task for ${user.wallet_address} already exists, skipping...`);
                 continue;
             }
 
@@ -59,12 +58,14 @@ export async function validateBalances(db: MyDatabase, evaa: OpenedContract<Evaa
             }
 
             if (healthParams.totalSupply === 0n) {
-                const message = `[Validator]: Problem with user ${user.wallet_address}: account doesn't have collateral at all, and will be blacklisted`;
-                console.warn(message);
+                const message = `Validator: Problem with user ${user.wallet_address}: account doesn't have collateral at all, and will be blacklisted`;
+                logMessage(message);
                 await db.blacklistUser(user.wallet_address);
-                console.log(message);
+                logMessage(message);
                 continue;
             }
+
+            // uncomment this option instead for selectLiquidationAssets if you need simply the greatest pair of assets
 
             // const {selectedLoanId, selectedCollateralId} = selectGreatestAssets(
             //     user.principals, pricesDict, assetsConfigDict, assetsDataDict, poolConfig
@@ -91,19 +92,19 @@ export async function validateBalances(db: MyDatabase, evaa: OpenedContract<Evaa
             const minCollateralAmount = maxCollateralRewardAmount; // liquidator will deduct dust
 
             if (!assetsConfigDict.has(collateralAsset.assetId)) {
-                console.log(`No config for collateral ${collateralAsset.name}, skipping...`);
+                logMessage(`Validator: No config for collateral ${collateralAsset.name}, skipping...`);
                 continue;
             }
             const collateralConfig = assetsConfigDict.get(collateralAsset.assetId)!;
             const collateralScale = 10n ** collateralConfig.decimals;
 
             if (!pricesDict.has(collateralAsset.assetId)) {
-                console.log(`No price for collateral ${collateralAsset.name}, skipping...`);
+                logMessage(`Validator: No price for collateral ${collateralAsset.name}, skipping...`);
                 continue;
             }
             const collateralPrice = pricesDict.get(collateralAsset.assetId)!;
             if (collateralPrice <= 0) {
-                console.log(`Invalid price for collateral ${collateralAsset.name}, skipping...`);
+                logMessage(`Validator: Invalid price for collateral ${collateralAsset.name}, skipping...`);
                 continue;
             }
 
@@ -120,7 +121,7 @@ export async function validateBalances(db: MyDatabase, evaa: OpenedContract<Evaa
                     dataCell
                 );
                 await bot.sendMessage(`Task for ${user.wallet_address} added`);
-                console.log(`Task for ${user.wallet_address} added`);
+                logMessage(`Task for ${user.wallet_address} added`);
             } else {
                 if (isPriceValid && isValidCollateral) {
                    
@@ -146,15 +147,15 @@ Rejected task data:
         }
 
         if (e.response) {
-            console.log(`Error: ${e.response.status} - ${e.response.statusText}`);
+            logMessage(`Validator: Error: ${e.response.status} - ${e.response.statusText}`);
         } else if (e.request) {
-            console.log(`Error: No response from server.
+            logMessage(`Validator: Error: No response from server.
 
 ${e.request}`);
         } else {
-            console.log(`Error: unknown`);
+            logMessage(`Validator: Error: unknown`);
         }
         console.log(e)
-        console.log(`Error while validating balances...`)
+        logMessage(`Validator: Error while validating balances...`)
     }
 }
