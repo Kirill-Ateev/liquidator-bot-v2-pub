@@ -1,10 +1,10 @@
-import { MAINNET_POOL_CONFIG } from "@evaafi/sdk";
-import { Address } from "@ton/core";
-import { TonClient } from "@ton/ton";
-import { configDotenv } from "dotenv";
-import { ASSET_DECIMALS, ASSET_ID } from "./steady_config";
+import {ASSET_DECIMALS, ASSET_ID} from "./steady_config";
+import {Address} from "@ton/core";
+import {TonClient} from "@ton/ton";
+import {configDotenv} from "dotenv";
+import {MAINNET_POOL_CONFIG} from "@evaafi/sdk";
 
-export const HIGHLOAD_ADDRESS = Address.parse('UQDY3g19Kvfdy1bdYXuCdJVzkeTxH_8A4v07kmIWmaM1nLHW')
+export const HIGHLOAD_ADDRESS = Address.parse('UQDo27P-CAam_G2xmQd4CxnFYjY2FKPmmKEc8wTCh4c33JWn')
 // jetton wallets of specified highloadAddress
 export const JETTON_WALLETS = new Map<bigint, Address>([
     // Main-jwallets
@@ -12,7 +12,7 @@ export const JETTON_WALLETS = new Map<bigint, Address>([
     // [ASSET_ID.jUSDC, Address.parse('EQA6mXtvihA1GG57dFCbzI1NsBlMu4iN-iSxbzN_seSlbaVM')],
     // [ASSET_ID.stTON, Address.parse('EQAw_YE5y9U3LFTPtm7peBWKz1PUg77DYlrJ3_NDyQAfab5s')],
     // [ASSET_ID.tsTON, Address.parse('EQDdpsEJ2nyPP2W2yzdcM2A4FeU-IQGyxM0omo0U2Yv2DvTB')],
-    [ASSET_ID.USDT, Address.parse('EQC7jrSQ5U5J0Z-RqdPHWSWb0xq_dLDIvRd4UZyBRa0cxsDX')],
+    [ASSET_ID.USDT, Address.parse('EQC183ELZmTbdsfRtPmp-SzyRXf0UOV3pdNNwtX2P98z2pQM')],
     // LP-jwallets
     // [ASSET_ID.TONUSDT_DEDUST, Address.parse('EQD1msA18OaAzYPAVrFKfbxHCl1kxQkzsY7zolgtwAqgUuMP')],
     // [ASSET_ID.TONUSDT_STONFI, Address.parse('EQAoXoKRiIx8SDXBXKUHJXfGYXi98a7Pr0UzMOSLz4gely2Z')],
@@ -25,9 +25,12 @@ export const JETTON_WALLETS = new Map<bigint, Address>([
 ]);
 
 export const IS_TESTNET = false;
-const dbPathMainnet = './database-mainnet.db';
-const dbPathTestnet = './database-testnet.db';
-export const DB_PATH = IS_TESTNET ? dbPathTestnet : dbPathMainnet
+
+const DB_PATH_MAINNET = './database-mainnet.db';
+const DB_PATH_TESTNET = './database-testnet.db';
+
+export const DB_PATH = IS_TESTNET ? DB_PATH_TESTNET : DB_PATH_MAINNET
+
 /* Actual configuration */
 export const RPC_ENDPOINT = 'https://toncenter.com/api/v2/jsonRPC'
 export const TON_API_ENDPOINT = 'https://tonapi.io/';

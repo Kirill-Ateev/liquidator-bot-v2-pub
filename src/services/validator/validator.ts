@@ -1,57 +1,90 @@
+import {Cell, Dictionary, OpenedContract} from "@ton/ton";
+import {MyDatabase} from "../../db/database";
+import {isAxiosError} from "axios";
 import {
     calculateHealthParams,
     calculateLiquidationAmounts,
     Evaa,
     findAssetById,
     PoolConfig,
+    PricesCollector,
     TON_MAINNET
 } from "@evaafi/sdk";
 import {logMessage, Messenger} from "../../lib/messenger";
 import {retry} from "../../util/retry";
 import {addLiquidationTask, selectLiquidationAssets} from "./helpers";
 import {PriceData} from "./types";
-import { MyDatabase } from "../../db/database";
-import { OpenedContract } from "@ton/core";
 import { isValidCollateralAsset } from "../../util/blockchain";
 import { getFriendlyAmount } from "../../util/format";
 import { ASSET_DECIMALS } from "../../steady_config";
-import { isAxiosError } from "axios";
+import {CheckOraclesEnum, CheckOraclesMessage, checkPriceData} from "../../util/prices";
+import {VALIDATOR_MAX_PRICES_ISSUED, LIQUIDATOR_PRICES_UPDATE_INTERVAL} from "../../steady_config";
 
-export async function validateBalances(db: MyDatabase, evaa: OpenedContract<Evaa>, bot: Messenger, poolConfig: PoolConfig) {
+export async function validateBalances(db: MyDatabase, evaa: OpenedContract<Evaa>, evaaPriceCollector: PricesCollector, bot: Messenger, poolConfig: PoolConfig) {
     try {
         const users = await db.getUsers();
 
-        // fetch prices
-        const pricesRes = await retry<PriceData>(
-            async () => await evaa.getPrices(['evaa.space', 'iota.evaa.finance', 'api.stardust-mainnet.iotaledger.net']),
-            {attempts: 10, attemptInterval: 1000}
-        );
-        if (!pricesRes.ok) throw (`Failed to fetch prices`);
-        const {dict: pricesDict, dataCell} = pricesRes.value;
+        let pricesDict: Dictionary<bigint, bigint>;
+        let pricesCell: Cell;
+        let lastPricesSync = 0; // not up to date
+        const isPriceDataActual = () => (Date.now() - lastPricesSync) / 1000 < LIQUIDATOR_PRICES_UPDATE_INTERVAL;
+
+        const updatePrices = async () => {
+            if (isPriceDataActual()) return;
+
+            // fetch prices
+            const pricesRes = await retry<PriceData>(
+                async () => await evaaPriceCollector.getPrices(),
+                {attempts: 10, attemptInterval: 1000}
+            );
+            if (!pricesRes.ok) throw new Error(`Failed to fetch prices`);
+
+            const res = checkPriceData(pricesRes.value.dataCell, VALIDATOR_MAX_PRICES_ISSUED);
+            if (res !== CheckOraclesEnum.OK) {
+                throw new Error(`${CheckOraclesMessage.at(res)}, cannot continue`);
+            }
+
+            pricesDict = pricesRes.value.dict;
+            pricesCell = pricesRes.value.dataCell;
+            lastPricesSync = Date.now();
+            logMessage('Prices updated, data is ok');
+        }
 
         // sync evaa (required to update rates mostly)
         const evaaSyncRes = await retry(
             async () => await evaa.getSync(),
             {attempts: 10, attemptInterval: 1000}
         );
-        if (!evaaSyncRes.ok) throw (`Failed to sync evaa`);
+        if (!evaaSyncRes.ok) {
+            throw new Error(`Failed to sync evaa`);
+        }
 
         const assetsDataDict = evaa.data.assetsData;
         const assetsConfigDict = evaa.data.assetsConfig;
 
         for (const user of users) {
+            await updatePrices();
+
             if (await db.isTaskExists(user.wallet_address)) {
                 logMessage(`Validator: Task for ${user.wallet_address} already exists, skipping...`);
                 continue;
             }
 
-            const healthParams = calculateHealthParams({
-                assetsData: evaa.data.assetsData,
-                assetsConfig: evaa.data.assetsConfig,
-                principals: user.principals,
-                prices: pricesDict,
-                poolConfig
-            });
+            let healthParams: any; // TODO: add return type to sdk
+
+            try {
+                healthParams = calculateHealthParams({
+                    assetsData: evaa.data.assetsData,
+                    assetsConfig: evaa.data.assetsConfig,
+                    principals: user.principals,
+                    prices: pricesDict,
+                    poolConfig
+                });
+            } catch (e) {
+                logMessage(`Failed to calculate heath factor for user ${user.wallet_address}`);
+                console.log(e);
+                continue;
+            }
 
             if (!healthParams.isLiquidatable) {
                 continue;
@@ -60,8 +93,11 @@ export async function validateBalances(db: MyDatabase, evaa: OpenedContract<Evaa
             if (healthParams.totalSupply === 0n) {
                 const message = `Validator: Problem with user ${user.wallet_address}: account doesn't have collateral at all, and will be blacklisted`;
                 logMessage(message);
-                await db.blacklistUser(user.wallet_address);
-                logMessage(message);
+                if (!await db.blacklistUser(user.wallet_address)) {
+                    await bot.sendMessage(`${message} : Failed to blacklist user`);
+                } else {
+                    await bot.sendMessage(`${message} : User was blacklisted`);
+                }
                 continue;
             }
 
@@ -78,6 +114,10 @@ export async function validateBalances(db: MyDatabase, evaa: OpenedContract<Evaa
 
             const loanAsset = findAssetById(selectedLoanId, poolConfig);
             const collateralAsset = findAssetById(selectedCollateralId, poolConfig);
+            if (!loanAsset || !collateralAsset) {
+                logMessage(`Failed to select loan or collateral for liquidation: loan id: ${selectedLoanId}, collateral id: ${selectedCollateralId}, skipping user`);
+                continue;
+            }
             const {totalSupply, totalDebt} = healthParams;
             const {
                 maxLiquidationAmount, maxCollateralRewardAmount
@@ -115,16 +155,23 @@ export async function validateBalances(db: MyDatabase, evaa: OpenedContract<Evaa
             const isValidCollateral = isValidCollateralAsset(collateralAsset.assetId)
             
             if (isPriceValid && isValidCollateral) {
-                await addLiquidationTask(db, user,
+                const res =  await addLiquidationTask(db, user,
                     loanAsset.assetId, collateralAsset.assetId,
                     maxLiquidationAmount, minCollateralAmount,
-                    dataCell
+                    pricesCell
                 );
-                await bot.sendMessage(`Task for ${user.wallet_address} added`);
-                logMessage(`Task for ${user.wallet_address} added`);
+
+                console.log('health params for liquidation:', {healthParams});
+
+                if (!res) {
+                    await bot.sendMessage(`Failed to add db task for user ${user.wallet_address}`);
+                    // continue;
+                } else {
+                    await bot.sendMessage(`Task for ${user.wallet_address} added`);
+                    logMessage(`Task for ${user.wallet_address} added`);
+                }
             } else {
                 if (isPriceValid && isValidCollateral) {
-                   
 
                     bot.sendMessage(
                         `[Validator]: ❌ Task with did not validate the threshold of validating assets (${isValidCollateral}) and the min amount (${isPriceValid}). Or not enough collateral for user.
@@ -139,7 +186,7 @@ Rejected task data:
                 }
             }
         }
-        // console.log(`Finish validating balances at ${new Date().toLocaleString()}`)
+        // logMessage(`Finish validating balances.`)
     } catch (e) {
         if (!isAxiosError(e)) {
             console.log(e)
